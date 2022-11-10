@@ -1,9 +1,11 @@
-package com.errros.Restobar.authentication;
+package com.errros.Restobar.controllers;
 
 
-import com.errros.Restobar.authentication.jwt.JWTUtility;
-import com.errros.Restobar.authentication.jwt.JwtRequestModel;
-import com.errros.Restobar.authentication.jwt.JwtResponseModel;
+import com.errros.Restobar.services.UserDetailsServiceImpl;
+import com.errros.Restobar.services.UserService;
+import com.errros.Restobar.jwt.JWTUtility;
+import com.errros.Restobar.jwt.JwtRequestModel;
+import com.errros.Restobar.jwt.JwtResponseModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -22,15 +24,13 @@ public class TokenController {
     private AuthenticationManager authenticationManager;
 
     @Autowired
-    private ApplicationUserService applicationUserService;
+    private UserDetailsServiceImpl userDetailsServiceImpl;
 
     @Autowired
     private UserService userService;
 
-
-
     @PostMapping(path = "/token")
-    JwtResponseModel authenticate(@RequestBody  JwtRequestModel request) throws Exception {
+    JwtResponseModel generateToken(@RequestBody  JwtRequestModel request) throws Exception {
 
         try {
             authenticationManager.authenticate(
@@ -44,13 +44,15 @@ public class TokenController {
         }
 
         UserDetails userDetails
-                = applicationUserService.loadUserByUsername(request.getEmail());
+                = userDetailsServiceImpl.loadUserByUsername(request.getEmail());
 
 
         final String token =
                 jwtUtility.generateToken(userDetails);
 
         return  new JwtResponseModel(token,userService.findByUsername(userDetails.getUsername()).get());
+
+
     }
 
     @GetMapping("/")

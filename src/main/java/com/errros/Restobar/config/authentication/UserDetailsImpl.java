@@ -1,5 +1,6 @@
-package com.errros.Restobar.authentication;
+package com.errros.Restobar.config.authentication;
 
+import com.errros.Restobar.entities.User;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -8,11 +9,11 @@ import java.util.Collection;
 import java.util.Collections;
 
 
-public class ApplicationUserDetails implements UserDetails {
+public class UserDetailsImpl implements UserDetails {
 
     private final User user;
 
-    public ApplicationUserDetails(User user) {
+    public UserDetailsImpl(User user) {
         super();
         this.user = user;
     }
@@ -39,7 +40,7 @@ public class ApplicationUserDetails implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        return true;
+        return user.getActive();
     }
 
     @Override

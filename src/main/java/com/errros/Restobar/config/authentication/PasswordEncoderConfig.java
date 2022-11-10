@@ -1,4 +1,4 @@
-package com.errros.Restobar.authentication;
+package com.errros.Restobar.config.authentication;
 
 
 import org.springframework.context.annotation.Bean;

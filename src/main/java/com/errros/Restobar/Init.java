@@ -1,8 +1,8 @@
 package com.errros.Restobar;
 
-import com.errros.Restobar.authentication.User;
-import com.errros.Restobar.authentication.UserRepository;
-import com.errros.Restobar.authentication.UserRole;
+import com.errros.Restobar.entities.Sys_Admin;
+import com.errros.Restobar.models.UserRole;
+import com.errros.Restobar.repositories.Sys_AdminRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -16,7 +16,7 @@ public class Init implements CommandLineRunner {
 
 
     @Autowired
-   private UserRepository userRepository;
+   private Sys_AdminRepository adminRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -24,11 +24,11 @@ public class Init implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
 
-        var admin =userRepository.findByEmail(SYS_ADMIN_MAIL);
+        var admin =adminRepository.findByEmail(SYS_ADMIN_MAIL);
         if(admin.isEmpty()){
             String password = passwordEncoder.encode(SYS_ADMIN_PASSWORD);
-            User u = new User(1l,"admin","admin","admin",password, UserRole.SYS_ADMIN,SYS_ADMIN_MAIL,null,null,true);
-            userRepository.save(u);
+            Sys_Admin sys_admin = new Sys_Admin(1l,"admin","admin","admin",password, UserRole.SYS_ADMIN,SYS_ADMIN_MAIL,null,null,true);
+            adminRepository.save(sys_admin);
         }
 
     }

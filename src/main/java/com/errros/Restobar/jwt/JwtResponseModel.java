@@ -1,6 +1,6 @@
-package com.errros.Restobar.authentication.jwt;
+package com.errros.Restobar.jwt;
 
-import com.errros.Restobar.authentication.User;
+import com.errros.Restobar.entities.User;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -11,4 +11,5 @@ import lombok.NoArgsConstructor;
 public class JwtResponseModel {
     private String jwtToken;
     private User user;
+
 }

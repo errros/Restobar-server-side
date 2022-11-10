@@ -1,4 +1,4 @@
-package com.errros.Restobar.authentication.jwt;
+package com.errros.Restobar.jwt;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;

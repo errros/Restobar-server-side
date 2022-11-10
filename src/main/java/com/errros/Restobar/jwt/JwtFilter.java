@@ -1,6 +1,6 @@
-package com.errros.Restobar.authentication.jwt;
+package com.errros.Restobar.jwt;
 
-import com.errros.Restobar.authentication.ApplicationUserService;
+import com.errros.Restobar.services.UserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -22,7 +22,7 @@ public class JwtFilter extends OncePerRequestFilter {
     private JWTUtility jwtUtility;
 
     @Autowired
-    private ApplicationUserService userService;
+    private UserDetailsServiceImpl userService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, FilterChain filterChain) throws ServletException, IOException {

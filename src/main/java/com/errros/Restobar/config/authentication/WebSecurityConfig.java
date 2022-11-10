@@ -1,7 +1,8 @@
-package com.errros.Restobar.authentication;
+package com.errros.Restobar.config.authentication;
 
 
-import com.errros.Restobar.authentication.jwt.JwtFilter;
+import com.errros.Restobar.services.UserDetailsServiceImpl;
+import com.errros.Restobar.jwt.JwtFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,6 +14,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.core.GrantedAuthorityDefaults;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -20,24 +22,23 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
-@EnableGlobalMethodSecurity(prePostEnabled = true)
+@EnableGlobalMethodSecurity(prePostEnabled = true, jsr250Enabled = true)
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     //this end-points are authorized for every user
-    private static final String[] WHITE_LIST = {"/","/token"};
+    private static final String[] WHITE_LIST = {"/","/token","/swagger-ui/**"};
 
     @Autowired
      private PasswordEncoder passwordEncoder;
 
     @Autowired
-    private ApplicationUserService userService;
+    private UserDetailsServiceImpl userService;
 
     @Autowired
     private JwtFilter jwtFilter;
 
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-
         auth.userDetailsService(userService);
     }
 
@@ -71,7 +72,6 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
-
     }
 
 }

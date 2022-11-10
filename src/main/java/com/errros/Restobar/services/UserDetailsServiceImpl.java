@@ -1,6 +1,9 @@
-package com.errros.Restobar.authentication;
+package com.errros.Restobar.services;
 
 
+import com.errros.Restobar.config.authentication.UserDetailsImpl;
+import com.errros.Restobar.entities.User;
+import com.errros.Restobar.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -11,7 +14,7 @@ import org.springframework.stereotype.Service;
 import java.util.Optional;
 
 @Service
-public class ApplicationUserService implements UserDetailsService {
+public class UserDetailsServiceImpl implements UserDetailsService {
 
     @Autowired
     private UserRepository userRepository;
@@ -24,17 +27,14 @@ public class ApplicationUserService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 
-
-
         Optional<User> user = userRepository.findByEmail(username);
 
 
         if(user.isEmpty()){
             throw new UsernameNotFoundException(String.format("user %s doesn't exist",username));
         }else{
-            return   new ApplicationUserDetails(user.get());
+            return   new UserDetailsImpl(user.get());
         }
-
 
     }
 
@@ -47,7 +47,7 @@ public class ApplicationUserService implements UserDetailsService {
         if(user.isEmpty()){
             throw new UsernameNotFoundException(String.format("user %s doesn't exist",username));
         }else{
-          return   new ApplicationUserDetails(user.get());
+          return   new UserDetailsImpl(user.get());
         }
     }
 

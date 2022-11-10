@@ -1,4 +1,4 @@
-package com.errros.Restobar.authentication.jwt;
+package com.errros.Restobar.jwt;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -12,14 +12,10 @@ import javax.validation.constraints.Size;
 @AllArgsConstructor
 @NoArgsConstructor
 public class JwtRequestModel {
-
+    @NotNull
     @Email
     private String email;
-
-
-    private String username;
-
     @NotNull
+    @Size(min = 8 , message = "password size should be longer than 8 characters")
     private String password;
-
 }
