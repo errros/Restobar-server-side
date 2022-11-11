@@ -6,6 +6,7 @@ import javax.persistence.*;
 import com.errros.Restobar.models.RestaurantRequest;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
+import org.springdoc.api.OpenApiResourceNotFoundException;
 
 import javax.persistence.Entity;
 import javax.validation.constraints.NotNull;
@@ -13,12 +14,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 @NoArgsConstructor
-@AllArgsConstructor
-@Getter
-@Setter
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@Data
 @Entity
 public class Restaurant {
 
+
+    @EqualsAndHashCode.Include
     @Id
     @GeneratedValue(strategy =GenerationType.AUTO)
     private Long id;
@@ -37,10 +39,10 @@ public class Restaurant {
     @JoinColumn(name = "sys_admin_id")
     private Sys_Admin sys_admin;
 
-    @OneToMany(mappedBy = "restaurant",cascade = {CascadeType.REMOVE,CascadeType.PERSIST,CascadeType.MERGE})
+    @OneToMany(fetch = FetchType.EAGER,mappedBy = "restaurant",cascade = {CascadeType.REMOVE,CascadeType.PERSIST,CascadeType.MERGE})
     private List<Owner> owners = new ArrayList<>();
 
-    @OneToMany(mappedBy = "restaurant",cascade = {CascadeType.REMOVE,CascadeType.PERSIST,CascadeType.MERGE})
+    @OneToMany(fetch = FetchType.EAGER,mappedBy = "restaurant",cascade = {CascadeType.REMOVE,CascadeType.PERSIST,CascadeType.MERGE})
     private List<Cashier> cashiers = new ArrayList<>();
 
     public Restaurant(RestaurantRequest restaurantRequest) {
@@ -62,6 +64,26 @@ public class Restaurant {
     public void addCashier(Cashier cashier) {
      cashier.setRestaurant(this);
      cashiers.add(cashier);
+    }
+    public void removeOwner(Owner owner) {
+
+        if(owners.contains(owner)){
+            if(owners.size()>1) {
+                owners.remove(owner);
+                owner.setRestaurant(null);
+            }else {
+                throw new OpenApiResourceNotFoundException("A restaurant has at least one owner!");
+
+            }
+            }
+
+    }
+
+    public void removeCashier(Cashier cashier) {
+       if(cashiers.contains(cashier)) {
+           cashier.setRestaurant(null);
+           cashiers.remove(cashier);
+       }
     }
 
 

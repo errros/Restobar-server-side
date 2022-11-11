@@ -4,6 +4,7 @@ package com.errros.Restobar.entities;
 import com.errros.Restobar.models.UserRole;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
@@ -11,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper=true)
 @Data
 @Entity
 public class Sys_Admin extends User {

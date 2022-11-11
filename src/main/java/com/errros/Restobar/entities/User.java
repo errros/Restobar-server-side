@@ -4,6 +4,7 @@ package com.errros.Restobar.entities;
 import com.errros.Restobar.models.UserRequest;
 import com.errros.Restobar.models.UserRole;
 import lombok.*;
+import org.hibernate.annotations.DiscriminatorOptions;
 
 import javax.persistence.*;
 import javax.validation.constraints.Email;
@@ -13,10 +14,10 @@ import javax.validation.constraints.Size;
 
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @NoArgsConstructor
-@Getter
-@Setter
+@Data
 @Entity
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorOptions(force = true)
 public class User {
 
 
@@ -86,4 +87,20 @@ public class User {
         this.phoneNumber = phoneNumber;
         this.active = active;
     }
+
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "id=" + id +
+                ", username='" + username + '\'' +
+                ", firstname='" + firstname + '\'' +
+                ", secondname='" + secondname + '\'' +
+                ", email='" + email + '\'' +
+                ", address='" + address + '\'' +
+                ", phoneNumber='" + phoneNumber + '\'' +
+                ", active=" + active +
+                '}';
+    }
 }
+

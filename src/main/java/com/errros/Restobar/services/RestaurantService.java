@@ -24,6 +24,7 @@ public class RestaurantService {
     private RestaurantRepository restaurantRepository;
     @Autowired
     private CashierRepository cashierRepository;
+
     @Autowired
     private OwnerRepository ownerRepository;
 
@@ -48,71 +49,72 @@ public class RestaurantService {
      restaurantRepository.deleteById(id);
     }
 
-    public Restaurant updateRestaurant(Long id, RestaurantRequest restaurantRequest) {
 
 
-        //this will throw an error if a restaurant with such an id doesnt exist
-        var persistedRestaurant = restaurantRepository.getById(id);
 
-        persistedRestaurant.setName(restaurantRequest.getName());
-       persistedRestaurant.setPhoneNumber(restaurantRequest.getPhoneNumber());
-       persistedRestaurant.setAddress(restaurantRequest.getAddress());
-
-
-      return restaurantRepository.save(persistedRestaurant);
-    }
-
-    public Restaurant addCashier(Long id, Long iduser, UserRequest cashierRequest) {
+    public Restaurant addCashier(Long id, UserRequest cashierRequest) {
         Cashier cashier = new Cashier(cashierRequest);
-        cashier.setRole(UserRole.OWNER);
+        cashier.setRole(UserRole.CASHIER);
+        cashier.setPassword(passwordEncoder.encode(cashier.getPassword()));
+
         Restaurant restaurant = restaurantRepository.getById(id);
-        User user = userRepository.getById(iduser);
 
-        if(user.getRole() == UserRole.SYS_ADMIN || restaurant.getOwners().contains(user)) {
 
-            cashier.setPassword(passwordEncoder.encode(cashier.getPassword()));
             restaurant.addCashier(cashier);
            return restaurantRepository.save(restaurant);
 
-        }else {
-            throw new OpenApiResourceNotFoundException("Unauthorized Operation for such a user!");
         }
 
 
-    }
 
-    public void deleteOwner(Long id, Long idOwner, Owner owner) {
 
-    }
-
-    public void deleteCashier(Long id, Long idCashier, Cashier cashier) {
-
-    }
-
-    public Restaurant addOwner(Long id, Long iduser, UserRequest ownerRequest) {
+    public Restaurant addOwner(Long id, UserRequest ownerRequest) {
         Owner owner = new Owner(ownerRequest);
-
         owner.setRole(UserRole.OWNER);
         owner.setPassword(passwordEncoder.encode(owner.getPassword()));
 
         Restaurant restaurant = restaurantRepository.getById(id);
-        User user = userRepository.getById(iduser);
-
-       if(user.getRole() == UserRole.SYS_ADMIN || restaurant.getOwners().contains(user)) {
-
            restaurant.addOwner(owner);
+
            return restaurantRepository.save(restaurant);
 
-       }else {
-           throw new OpenApiResourceNotFoundException("Unauthorized Operation for such a user!");
        }
-    }
 
     public List<Restaurant> getAllRestaurants() {
         return restaurantRepository.findAll();
     }
 
-    public Optional<Restaurant> getRestaurant(Long id) {
-      return restaurantRepository.findById(id);
+    public void deleteOwner(Long idRestaurant, Long idOwner) {
+    var restaurant = restaurantRepository.getById(idRestaurant);
+    Owner owner = ownerRepository.getById(idOwner);
+        restaurant.removeOwner(owner);
+        restaurantRepository.save(restaurant);
     }
+
+
+    public void deleteCashier(Long idRestaurant, Long idCashier) {
+
+            var restaurant = restaurantRepository.getById(idRestaurant);
+            var cashier = cashierRepository.getById(idCashier);
+            restaurant.removeCashier(cashier);
+            restaurantRepository.save(restaurant);
+    }
+
+    public Restaurant getRestaurant(Long idRestaurant) {
+                      Restaurant restaurant = restaurantRepository.getById(idRestaurant);
+      return restaurant;
+    }
+
+    public Restaurant updateRestaurant(Long idRestaurant, RestaurantRequest restaurantRequest) {
+
+        var persistedRestaurant = restaurantRepository.getById(idRestaurant);
+
+        persistedRestaurant.setName(restaurantRequest.getName());
+        persistedRestaurant.setPhoneNumber(restaurantRequest.getPhoneNumber());
+        persistedRestaurant.setAddress(restaurantRequest.getAddress());
+        return restaurantRepository.save(persistedRestaurant);
+
+
+    }
+
 }

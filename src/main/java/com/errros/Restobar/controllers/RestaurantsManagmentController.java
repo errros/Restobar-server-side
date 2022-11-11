@@ -22,7 +22,6 @@ import javax.validation.Valid;
 
 @RestController
 @RequestMapping("api/restaurant")
-@PreAuthorize(value = "hasAuthority('SYS_ADMIN')")
 public class RestaurantsManagmentController {
 
     @Autowired
@@ -30,102 +29,111 @@ public class RestaurantsManagmentController {
 
 
 
-    @Operation(summary = "get a list of all restaurants ", security = {@SecurityRequirement(name = "bearer-key")})
-
+    @PreAuthorize("hasAuthority('SYS_ADMIN')")
+    @Operation(summary = "get a list of all restaurants ",
+            description = "only sys_admin can do this operation",
+            security = {@SecurityRequirement(name = "bearer-key")})
     @GetMapping
     public ResponseEntity<String> getAllRestaurants(){
-
         var responseBody = restaurantService.getAllRestaurants();
        return ResponseEntity.status(HttpStatus.OK).body(responseBody.toString());
-
     }
 
-    @Operation(summary = "get a specific restaurant", security = {@SecurityRequirement(name = "bearer-key")})
-    @GetMapping("{id}")
-    public ResponseEntity<String> getRestaurant(@PathVariable(value = "id",required = true) Long id){
 
-        var responseBody = restaurantService.getRestaurant(id);
-       if(responseBody.isPresent()) {
-           return ResponseEntity.status(HttpStatus.OK).body(responseBody.get().toString());
-       }else {
-           return ResponseEntity.status(HttpStatus.NO_CONTENT).body("There's no restaurant with such an id!");
-       }
+    @PreAuthorize(value = "hasAuthority('SYS_ADMIN') or #idRestaurant == authentication.principal.user.restaurant.id")
+    @Operation(summary = "get a specific restaurant",
+             description = "a sysadmin , an owner or a cashier of this restaurant can retrieve it",
+            security = {@SecurityRequirement(name = "bearer-key")})
+    @GetMapping("{id_restaurant}")
+    public ResponseEntity<String> getRestaurant(@PathVariable(value = "id_restaurant",required = true) Long idRestaurant){
+
+        var responseBody = restaurantService.getRestaurant(idRestaurant);
+   return ResponseEntity.status(HttpStatus.OK).body(responseBody.toString());
     }
-    @Operation(summary = "create a restaurant", security = {@SecurityRequirement(name = "bearer-key")})
+
+
+    @PreAuthorize("hasAuthority('SYS_ADMIN')")
+    @Operation(summary = "create a restaurant",
+            description = "operation can be done by sys_admin only",security = {@SecurityRequirement(name = "bearer-key")})
     @PostMapping
     public ResponseEntity<String> createRestaurant(@RequestBody @Valid RestaurantRequest restaurant){
-
         System.out.println(restaurant);
         var responseBody = restaurantService.createRestaurant(restaurant);
        return ResponseEntity.status(HttpStatus.OK).body(responseBody.toString());
 
     }
 
-    @Operation(summary = "delete a restaurant", security = {@SecurityRequirement(name = "bearer-key")})
+
+    @PreAuthorize("hasAuthority('SYS_ADMIN')")
+    @Operation(summary = "delete a restaurant",
+            description = "opearation can be done only by sys_admin" ,
+            security = {@SecurityRequirement(name = "bearer-key")})
     @DeleteMapping("{id}")
     public ResponseEntity<String> deleteRestaurant(@PathVariable(value = "id",required = true) Long id){
-
          restaurantService.deleteRestaurant(id);
        return ResponseEntity.status(HttpStatus.OK).body("Deleted Successfully!");
     }
 
-    @Operation(summary = "update a restaurant infos", security = {@SecurityRequirement(name = "bearer-key")})
-    @PutMapping("{id}")
-    public ResponseEntity<String> updateRestaurant(@PathVariable(value = "id",required = true) Long id ,
+    @PreAuthorize(value = "hasAuthority('SYS_ADMIN') or (hasAuthority('OWNER') and #idRestaurant == authentication.principal.user.restaurant.id)")
+    @Operation(summary = "update a restaurant infos",
+            description = "operation can be done by a sysadmin or an owner of the restauarant",
+            security = {@SecurityRequirement(name = "bearer-key")})
+    @PutMapping("{restaurant_id}")
+    public ResponseEntity<String> updateRestaurant(@PathVariable(value = "restaurant_id",required = true) Long idRestaurant ,
                                              @RequestBody @Valid RestaurantRequest restaurantRequest){
-        var responseBody = restaurantService.updateRestaurant(id,restaurantRequest);
+        var responseBody = restaurantService.updateRestaurant(idRestaurant,restaurantRequest);
         return ResponseEntity.status(HttpStatus.OK).body(responseBody.toString());
     }
 
 
-
-    @Operation(summary = "register an owner of a restaurant", security = {@SecurityRequirement(name = "bearer-key")})
-    @PostMapping("/{idres}/{iduser}/owner")
-    public ResponseEntity<String> addOwner(@PathVariable(value = "idres",required = true) Long idres ,
-                                           @PathVariable(value = "iduser",required = false) Long iduser,
+    @PreAuthorize("hasAuthority('OWNER') AND #idres == authentication.principal.restaurant.id OR hasAuthority('SYS_ADMIN')")
+            @Operation(summary = "register an owner of a restaurant",
+                    description = "either a sysadmin , or an owner of the restaurant can do",
+                    security = {@SecurityRequirement(name = "bearer-key")})
+    @PostMapping("/{id_restaurant}/owner")
+    public ResponseEntity<String> addOwner(@PathVariable(value = "id_restaurant",required = true) Long idres ,
                                            @RequestBody @Valid UserRequest ownerRequest){
 
-
-         var restaurant = restaurantService.addOwner(idres,iduser,ownerRequest);
+         var restaurant = restaurantService.addOwner(idres,ownerRequest);
 return ResponseEntity.status(HttpStatus.OK).body(restaurant.toString());
 
     }
 
-    @Operation(summary = "register a cashier in a restaurant", security = {@SecurityRequirement(name = "bearer-key")})
-    @PostMapping("/{idres}/{iduser}/cashier")
-    public ResponseEntity<String> addCashier(@PathVariable(value = "idres",required = true) Long id ,
-                                             @PathVariable(value = "iduser",required = false) Long iduser,
+    @PreAuthorize("hasAuthority('OWNER') AND #id == authentication.principal.user.restaurant.id OR hasAuthority('SYS_ADMIN')")
+    @Operation(summary = "register a cashier in a restaurant",
+            description = "operation can be done by sys_admin or an owner of that restaurant",security = {@SecurityRequirement(name = "bearer-key")})
+    @PostMapping("/{id_restaurant}/cashier")
+    public ResponseEntity<String> addCashier(@PathVariable(value = "id_restaurant",required = true) Long id ,
                                      @RequestBody @Valid UserRequest cashierRequest){
 
-        var restaurant = restaurantService.addCashier(id,iduser,cashierRequest);
+        var restaurant = restaurantService.addCashier(id,cashierRequest);
         return ResponseEntity.status(HttpStatus.OK).body(restaurant.toString());
-
-    }
-/*
-
-    @PostMapping("{id}/{idOwner}")
-    public ResponseEntity<String> deleteOwner(@PathVariable(value = "id",required = true) Long id ,
-                                     @PathVariable(value = "idOwner",required = true) Long idOwner,
-                                     @RequestBody @Valid Owner owner){
-
-
-        var responseBody = restaurantService.deleteOwner(id,idOwner,owner);
-
-
-    }
-    @PostMapping("{id}/{idCashier}")
-    public ResponseEntity<String> deleteCashier(@PathVariable(value = "id",required = true) Long id ,
-                                          @PathVariable(value = "idCashier",required = true) Long idCashier ,
-                                     @RequestBody @Valid Cashier cashier){
-
-        var responseBody = restaurantService.deleteCashier(id,idCashier,cashier);
-
-
-
     }
 
 
-*/
+    @PreAuthorize("hasAuthority('OWNER') AND #idRestaurant == authentication.principal.user.restaurant.id OR hasAuthority('SYS_ADMIN')")
+    @Operation(summary = "delete an owner ", description = "either a sysadmin , or an owner of the restaurant can do the operation"
+            ,security = {@SecurityRequirement(name = "bearer-key")})
+    @DeleteMapping("{id_restaurant}/owner/{id_owner}")
+    public ResponseEntity<String> deleteOwner(@PathVariable(value = "id_restaurant",required = true) Long idRestaurant,
+                                     @PathVariable(value = "id_owner") Long idOwner){
+         restaurantService.deleteOwner(idRestaurant,idOwner);
+        return ResponseEntity.status(HttpStatus.OK).body(String.format("Deleted owner with id %d from restaurant with id %d successfuly ",idOwner,idRestaurant));
+
+    }
+
+    @PreAuthorize("hasAuthority('OWNER') and #idRestaurant == authentication.principal.user.restaurant.id OR hasAuthority('SYS_ADMIN')")
+    @Operation(summary = "delete a cashier ", description = "either a sysadmin , or an owner of the restaurant can do"
+            ,security = {@SecurityRequirement(name = "bearer-key")})
+    @DeleteMapping("{id_restaurant}/cashier/{id_cashier}")
+    public ResponseEntity<String> deleteCashier(@PathVariable(value = "id_restaurant",required = true) Long idRestaurant ,
+                                     @PathVariable(value = "id_cashier") Long idCashier){
+       restaurantService.deleteCashier(idRestaurant,idCashier);
+        return ResponseEntity.status(HttpStatus.OK).body(String.format("Deleted cashier with id %d from restaurant with id %d successfuly ",idCashier,idRestaurant));
+
+    }
+
+
 
 
 
