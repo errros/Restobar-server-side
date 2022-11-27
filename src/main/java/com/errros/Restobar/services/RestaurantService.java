@@ -1,20 +1,18 @@
 package com.errros.Restobar.services;
 
 
-import com.errros.Restobar.entities.Cashier;
-import com.errros.Restobar.entities.Owner;
-import com.errros.Restobar.entities.Restaurant;
-import com.errros.Restobar.entities.User;
-import com.errros.Restobar.models.RestaurantRequest;
-import com.errros.Restobar.models.UserRequest;
-import com.errros.Restobar.models.UserRole;
+import com.errros.Restobar.entities.*;
+import com.errros.Restobar.models.*;
 import com.errros.Restobar.repositories.*;
 import org.springdoc.api.OpenApiResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.parameters.P;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -35,6 +33,23 @@ public class RestaurantService {
     private PasswordEncoder passwordEncoder;
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private TvaRepository tvaRepository;
+    @Autowired
+   private CategoryRepository categoryRepository;
+
+    @Autowired
+    private SubCategoryRepository subCategoryRepository;
+
+    @Autowired
+    private ProductRepository productRepository;
+
+    @Autowired
+    private ImageRepository imageRepository;
+    @Autowired
+    private FileService fileService;
+
 
     public Restaurant createRestaurant(RestaurantRequest restaurantRequest) {
 
@@ -117,4 +132,266 @@ public class RestaurantService {
 
     }
 
+    public List<Category> getAllCategories(Long idRestaurant){
+        return restaurantRepository.getById(idRestaurant).getCategories();
+    }
+    public Category createCategory(Long idRestaurant, CategoryRequest categoryRequest, MultipartFile img) {
+
+       Restaurant restaurant = restaurantRepository.getById(idRestaurant);
+
+       //retrive the tva1,tva2 with ids in the categoryRequest
+        Tva tva1 = tvaRepository.getById(categoryRequest.getTvaOnTableId());
+        Tva tva2 = tvaRepository.getById(categoryRequest.getTvaTakenAwayId());
+
+
+        //are tva1,tva2  of this restaurant
+        if(restaurant.getTvas().containsAll(List.of(tva1,tva2))) {
+
+        Category category = new Category(categoryRequest);
+         category.addTva(tva1);
+         category.addTva(tva2);
+
+        restaurant.addCategory(category);
+
+         category = categoryRepository.save(category);
+
+         //Save the img if it exists
+        if(Objects.nonNull(img)){
+
+        var filename = fileService.generateFileName(img,FileType.IMG_CATEGORY,category);
+
+         var path = fileService.save(img,filename, FileType.IMG_CATEGORY);
+         //persist image with name = restaurantname-categoryname
+         Image image = new Image(String.join("-",restaurant.getName(),"Categorie",category.getName()),path.toString(),category);
+         image = imageRepository.save(image);
+
+         //update the category with the saved image
+        category.setImage(image);
+        }
+
+        return categoryRepository.save(category);
+
+
+        }else {
+        throw new OpenApiResourceNotFoundException("This restaurant doesn't have  one or the two tvas you provided");
+    }
+    }
+
+    public Category updateCategory(Long idRestaurant, Long idCategory, CategoryRequest categoryRequest, MultipartFile img) {
+
+        Restaurant restaurant = restaurantRepository.getById(idRestaurant);
+        Category category = categoryRepository.getById(idCategory);
+        //check if the retrieved category is for the given restaurant
+        if(!restaurant.getCategories().contains(category)){
+            throw new OpenApiResourceNotFoundException("There's no category with such an id in this restaurant");
+        }
+
+        //retrive the tva1,tva2 with ids in the categoryRequest
+        Tva tva1 = tvaRepository.getById(categoryRequest.getTvaOnTableId());
+        Tva tva2 = tvaRepository.getById(categoryRequest.getTvaTakenAwayId());
+
+
+        //are tva1,tva2  of this restaurant
+        if(restaurant.getTvas().containsAll(List.of(tva1,tva2))) {
+
+            category.setName(categoryRequest.getName());
+            category.setDescription(categoryRequest.getDescription());
+            category.clearTvas();
+
+            category.addTva(tva1);
+            category.addTva(tva2);
+
+            category.setImage(null);
+
+
+            //delete preexisting image
+            imageRepository.deleteByCategory(category);
+            //TODO remove physically the image
+            //Save the img if the user has provided it
+            if(Objects.nonNull(img)){
+
+                var filename = fileService.generateFileName(img,FileType.IMG_CATEGORY,category);
+
+                var path = fileService.save(img,filename, FileType.IMG_CATEGORY);
+                //persist image with name = restaurantname-categoryname
+                Image image = new Image(String.join("-",restaurant.getName(),"Categorie",category.getName()),path.toString(),category);
+                image = imageRepository.save(image);
+
+                //update the category with the saved image
+                category.setImage(image);
+            }
+
+            return categoryRepository.save(category);
+
+        }else {
+            throw new OpenApiResourceNotFoundException("This restaurant doesn't have  one or the two tvas you provided");
+        }
+
+
+    }
+
+    public Category getCategory(Long idRestaurant, Long idCategory){
+        Restaurant restaurant = restaurantRepository.getById(idRestaurant);
+        Category category = categoryRepository.getById(idCategory);
+        //check if the retrieved category is for the given restaurant
+        if(!restaurant.getCategories().contains(category)){
+            throw new OpenApiResourceNotFoundException("There's no category with such an id in this restaurant");
+        }
+        return category;
+    }
+
+
+    //TODO cleaning the files after deleting the category
+
+    public void deleteCategory(Long idRestaurant,Long idCategory){
+        Restaurant restaurant = restaurantRepository.getById(idRestaurant);
+        System.out.println(restaurant);
+        Category category = categoryRepository.getById(idCategory);
+        System.out.println(category);
+        if(!restaurant.getCategories().contains(category)){
+            throw new OpenApiResourceNotFoundException("There's no such category in this restaurant!");
+        }
+
+        restaurant.removeCategory(category);
+
+        categoryRepository.deleteById(category.getId());
+
+
+
+    }
+
+
+
+    public SubCategory createSubCategory(Long idRestaurant, Long idCategory, String subCategoryName, MultipartFile img) {
+
+        Restaurant restaurant = restaurantRepository.getById(idRestaurant);
+        Category category = categoryRepository.getById(idCategory);
+
+        if(!category.getRestaurant().equals(restaurant)) {
+         throw new OpenApiResourceNotFoundException("There's no such a category for this restaurant!");
+        }
+
+        SubCategory subCategory = new SubCategory(subCategoryName);
+
+        category.addSubCategory(subCategory);
+
+        subCategory = subCategoryRepository.save(subCategory);
+
+            //Save the img if it exists
+            if(Objects.nonNull(img)){
+
+                var filename = fileService.generateFileName(img,FileType.IMG_SUBCATEGORY,subCategory);
+
+                var path = fileService.save(img,filename, FileType.IMG_SUBCATEGORY);
+                //persist image with name = restaurantname-categoryname
+                Image image = new Image(String.join("-",restaurant.getName(),"SubCategorie",subCategory.getName()),path.toString(),subCategory);
+                image = imageRepository.save(image);
+
+                //update the category with the saved image
+                subCategory.setImage(image);
+            }
+
+            return subCategoryRepository.save(subCategory);
+
+
+        }
+
+    public void deleteSubCategory(Long idRestaurant, Long idCategory, Long idSubCategory) {
+
+        Restaurant restaurant = restaurantRepository.getById(idRestaurant);
+
+        Category category = categoryRepository.getById(idCategory);
+
+        SubCategory subCategory = subCategoryRepository.getById(idSubCategory);
+
+
+        if(!restaurant.getCategories().contains(category)){
+            throw new OpenApiResourceNotFoundException("There's no such category in this restaurant!");
+        }
+
+        if(!category.getSubCategories().contains(subCategory)){
+            throw new OpenApiResourceNotFoundException("There's no such subcategory in this category!");
+        }
+
+        category.removeSubCategory(subCategory);
+        subCategoryRepository.deleteById(subCategory.getId());
+
+
+    }
+
+    public SubCategory updateSubCategory(Long idRestaurant , Long idCategory , Long idSubCategory ,String subCategoryName, MultipartFile img ){
+
+        Restaurant restaurant = restaurantRepository.getById(idRestaurant);
+        Category category = categoryRepository.getById(idCategory);
+        SubCategory subCategory = subCategoryRepository.getById(idSubCategory);
+
+        //check if the retrieved category is for the given restaurant
+        if(!restaurant.getCategories().contains(category)){
+            throw new OpenApiResourceNotFoundException("There's no category with such an id in this restaurant");
+        }
+       //check if the retrieved subcategory if for the given category
+        if(!category.getSubCategories().contains(subCategory)){
+            throw new OpenApiResourceNotFoundException("There's no such subcategory in this category!");
+        }
+
+
+            subCategory.setName(subCategoryName);
+            category.setImage(null);
+            //delete preexisting image
+            imageRepository.deleteBySubCategory(subCategory);
+            //TODO remove physically the image
+            //Save the img if the user has provided it
+            if(Objects.nonNull(img)){
+
+                var filename = fileService.generateFileName(img,FileType.IMG_SUBCATEGORY,subCategory);
+
+                var path = fileService.save(img,filename, FileType.IMG_SUBCATEGORY);
+                //persist image with name = restaurantname-categoryname
+                Image image = new Image(String.join("-",restaurant.getName(),"SubCategorie",subCategory.getName()),path.toString(),subCategory);
+                image = imageRepository.save(image);
+
+                //update the category with the saved image
+                subCategory.setImage(image);
+            }
+            return subCategoryRepository.save(subCategory);
+
+    }
+
+    public SubCategory getSubCategory(Long idRestaurant , Long idCategory , Long idSubCategory){
+        Restaurant restaurant = restaurantRepository.getById(idRestaurant);
+        Category category = categoryRepository.getById(idCategory);
+        SubCategory subCategory = subCategoryRepository.getById(idSubCategory);
+
+        //check if the retrieved category is for the given restaurant
+        if(!restaurant.getCategories().contains(category)){
+            throw new OpenApiResourceNotFoundException("There's no category with such an id in this restaurant");
+        }
+        //check if the retrieved subcategory if for the given category
+        if(!category.getSubCategories().contains(subCategory)){
+            throw new OpenApiResourceNotFoundException("There's no such subcategory in this category!");
+        }
+        return subCategory;
+    }
+
+
+    public List<Tva> getAllTva(Long idRestaurant){
+        return restaurantRepository.getById(idRestaurant).getTvas();
+    }
+    public Tva createTva(Long idRestaurant, String tvaName, Integer tvaValue) {
+        Restaurant restaurant = restaurantRepository.getById(idRestaurant);
+        Tva tva = new Tva(tvaName,tvaValue);
+        tva.setRestaurant(restaurant);
+        return tvaRepository.save(tva);
+
+    }
+    public void deleteTva(Long idRestaurant, Long tvaId) {
+        Restaurant restaurant = restaurantRepository.getById(idRestaurant);
+       Tva tva = tvaRepository.getById(tvaId);
+       if(restaurant.getTvas().contains(tva)){
+           tvaRepository.deleteById(tvaId);
+       }else {
+           throw new OpenApiResourceNotFoundException(String.format("There's no TVA With id=%d in restaurant with id=%d",tvaId,idRestaurant));
+       }
+
+    }
 }
