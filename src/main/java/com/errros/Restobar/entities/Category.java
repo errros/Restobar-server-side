@@ -82,6 +82,18 @@ public class Category {
     }
 
 
+    public void addProduct(Product product) {
+        this.products.add(product);
+        product.setCategory(this);
+    }
+
+    public void removeProduct(Product product) {
+        this.products.remove(product);
+        product.setCategory(null);
+    }
+
+
+
     @Override
     public String toString() {
         return "Category{" +
@@ -91,5 +103,8 @@ public class Category {
                 ", subCategories=" + subCategories +
                 ", products=" + products +
                 '}';
+    }
+
+    public void addProduct() {
     }
 }

@@ -336,7 +336,7 @@ public class RestaurantService {
 
 
             subCategory.setName(subCategoryName);
-            category.setImage(null);
+            subCategory.setImage(null);
             //delete preexisting image
             imageRepository.deleteBySubCategory(subCategory);
             //TODO remove physically the image
@@ -392,6 +392,142 @@ public class RestaurantService {
        }else {
            throw new OpenApiResourceNotFoundException(String.format("There's no TVA With id=%d in restaurant with id=%d",tvaId,idRestaurant));
        }
+
+    }
+
+    public Product createProductInsideCategory(Long idRestaurant, Long idCategory, ProductRequest productRequest, MultipartFile img) {
+
+
+        Restaurant restaurant = restaurantRepository.getById(idRestaurant);
+        Category category = categoryRepository.getById(idCategory);
+
+        //check if the retrieved category is for the given restaurant
+        if(!restaurant.getCategories().contains(category)){
+            throw new OpenApiResourceNotFoundException("There's no category with such an id in this restaurant");
+        }
+
+        Product product = new Product(productRequest);
+        category.addProduct(product);
+        product = productRepository.save(product);
+
+        //Save the img if it exists
+        if(Objects.nonNull(img)){
+
+            var filename = fileService.generateFileName(img,FileType.IMG_PRODUCT,product);
+
+            var path = fileService.save(img,filename, FileType.IMG_PRODUCT);
+            //persist image with name = restaurantname-categoryname
+            Image image = new Image(String.join("-",restaurant.getName(),"Product",product.getName()),path.toString(),product);
+            image = imageRepository.save(image);
+
+            //update the product with the saved image
+            product.setImage(image);
+        }
+        return productRepository.save(product);
+
+    }
+
+
+
+
+
+
+
+    public Product createProductInsideSubCategory(Long idRestaurant, Long idCategory, Long idSubCategory, ProductRequest productRequest, MultipartFile img) {
+
+        Restaurant restaurant = restaurantRepository.getById(idRestaurant);
+        Category category = categoryRepository.getById(idCategory);
+        SubCategory subCategory = subCategoryRepository.getById(idSubCategory);
+
+        //check if the retrieved category is for the given restaurant
+        if(!restaurant.getCategories().contains(category)){
+            throw new OpenApiResourceNotFoundException("There's no category with such an id in this restaurant");
+        }
+        //check if the retrieved subcategory if for the given category
+        if(!category.getSubCategories().contains(subCategory)){
+            throw new OpenApiResourceNotFoundException("There's no such subcategory in this category!");
+        }
+
+        Product product = new Product(productRequest);
+        subCategory.addProduct(product);
+        product = productRepository.save(product);
+
+        //Save the img if it exists
+        if(Objects.nonNull(img)){
+
+            var filename = fileService.generateFileName(img,FileType.IMG_PRODUCT,product);
+
+            var path = fileService.save(img,filename, FileType.IMG_PRODUCT);
+            //persist image with name = restaurantname-categoryname
+            Image image = new Image(String.join("-",restaurant.getName(),"Product",product.getName()),path.toString(),product);
+            image = imageRepository.save(image);
+            //update the product with the saved image
+            product.setImage(image);
+        }
+        return productRepository.save(product);
+    }
+
+    public void deleteProduct(Long idRestaurant, Long idProduct) {
+        Restaurant restaurant = restaurantRepository.getById(idRestaurant);
+        Product product = productRepository.getById(idProduct);
+
+        //check if the retrieved product is for the given restaurant
+        if (Objects.nonNull(product.getCategory()) && !product.getCategory().getRestaurant().equals(restaurant) ||
+                Objects.nonNull(product.getSubCategory()) && !product.getSubCategory().getCategory().getRestaurant().equals(restaurant)
+        ){
+            throw new OpenApiResourceNotFoundException("There's no such product with such an id in this restaurant");
+        }
+
+
+        //a product either belongs to a category or a subcategory , delete the product either from the category or the subcategory he belongs to
+        Optional.ofNullable(product.getCategory()).ifPresentOrElse(category -> category.removeProduct(product), new Runnable() {
+            @Override
+            public void run() {
+                product.getSubCategory().removeProduct(product);
+            }
+        });
+
+        productRepository.delete(product);
+
+    }
+
+    public Product updateProduct(Long idRestaurant, Long idProduct, ProductRequest productRequest, MultipartFile img) {
+        Restaurant restaurant = restaurantRepository.getById(idRestaurant);
+        Product product = productRepository.getById(idProduct);
+
+        //check if the retrieved product is for the given restaurant
+        if (Objects.nonNull(product.getCategory()) && !product.getCategory().getRestaurant().equals(restaurant) ||
+                Objects.nonNull(product.getSubCategory()) && !product.getSubCategory().getCategory().getRestaurant().equals(restaurant)
+        ){
+            throw new OpenApiResourceNotFoundException("There's no such product with such an id in this restaurant");
+        }
+
+
+        product.setName(productRequest.getName());
+        product.setPriceOnTable(productRequest.getPriceOnTable());
+        product.setPriceTakenAway(productRequest.getPriceTakenAway());
+        product.setAllowDiscount(productRequest.getAllowDiscount());
+        product.setQtyStock(productRequest.getQtyStock());
+        product.setBuyingPrice(productRequest.getBuyingPrice());
+        product.setImage(null);
+        imageRepository.deleteByProduct(product);
+
+        //Save the img if it exists
+        if(Objects.nonNull(img)){
+
+            var filename = fileService.generateFileName(img,FileType.IMG_PRODUCT,product);
+
+            var path = fileService.save(img,filename, FileType.IMG_PRODUCT);
+            //persist image with name = restaurantname-categoryname
+            Image image = new Image(String.join("-",restaurant.getName(),"Product",product.getName()),path.toString(),product);
+            image = imageRepository.save(image);
+            //update the product with the saved image
+            product.setImage(image);
+        }
+        return productRepository.save(product);
+
+
+
 
     }
 }

@@ -2,13 +2,14 @@ package com.errros.Restobar.controllers;
 
 
 import com.errros.Restobar.entities.Category;
+import com.errros.Restobar.entities.Product;
 import com.errros.Restobar.entities.SubCategory;
 import com.errros.Restobar.entities.Tva;
 import com.errros.Restobar.models.CategoryRequest;
+import com.errros.Restobar.models.ProductRequest;
 import com.errros.Restobar.services.RestaurantService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import jdk.jfr.ContentType;
 import org.springdoc.api.OpenApiResourceNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -21,7 +22,6 @@ import javax.validation.Valid;
 import javax.validation.constraints.Size;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 @RestController
 @RequestMapping(value = "api/restaurant/{restaurant_id}")
@@ -39,7 +39,7 @@ public class RestaurantController {
 
     @Operation(summary = "retrieve all categories in a restaurant",
             description = "operation can be done by sys_admin or a restaurant owner",security = {@SecurityRequirement(name = "bearer-key")})
-    @GetMapping(path = "category", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    @GetMapping(path = "category")
     public ResponseEntity<List<Category>> getAllCategories(@PathVariable("restaurant_id") Long idRestaurant){
         return ResponseEntity.status(HttpStatus.OK).body(restaurantService.getAllCategories(idRestaurant));
     }
@@ -110,7 +110,7 @@ return ResponseEntity.status(HttpStatus.OK).body("Category with it all subcatego
     public ResponseEntity<SubCategory> createSubCategory(@PathVariable("restaurant_id") Long idRestaurant ,
                                                     @PathVariable("category_id") Long idCategory,
                                                     @Valid @RequestParam @Size(min = 3) String subCategoryName,
-                                                    @RequestPart MultipartFile img){
+                                                    @RequestPart(required = false) MultipartFile img){
 
         if(Objects.nonNull(img) && !(img.getContentType().contains("png") ||img.getContentType().contains("jpg") || img.getContentType().contains("jpeg")) ){
             throw new OpenApiResourceNotFoundException("The uploaded file should be an image (png , jpg ,jpeg)!");
@@ -121,12 +121,12 @@ return ResponseEntity.status(HttpStatus.OK).body("Category with it all subcatego
 
     @Operation(summary = "update a subcategory of products",
             description = "operation can be done by sys_admin or a restaurant owner",security = {@SecurityRequirement(name = "bearer-key")})
-    @PostMapping(path = "category/{category_id}/subcategory/{subcategory_id}",consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public ResponseEntity<SubCategory> createSubCategory(@PathVariable("restaurant_id") Long idRestaurant ,
+    @PutMapping(path = "category/{category_id}/subcategory/{subcategory_id}",consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    public ResponseEntity<SubCategory> updateSubCategory(@PathVariable("restaurant_id") Long idRestaurant ,
                                                     @PathVariable("category_id") Long idCategory,
                                                     @PathVariable("subcategory_id") Long idSubCategory,
                                                     @Valid @RequestParam @Size(min = 3) String subCategoryName,
-                                                    @RequestPart MultipartFile img){
+                                                    @RequestPart(required = false) MultipartFile img){
 
         if(Objects.nonNull(img) && !(img.getContentType().contains("png") ||img.getContentType().contains("jpg") || img.getContentType().contains("jpeg")) ){
             throw new OpenApiResourceNotFoundException("The uploaded file should be an image (png , jpg ,jpeg)!");
@@ -138,7 +138,7 @@ return ResponseEntity.status(HttpStatus.OK).body("Category with it all subcatego
 
     @Operation(summary = "get a subcategory of products",
             description = "operation can be done by sys_admin or a restaurant owner",security = {@SecurityRequirement(name = "bearer-key")})
-    @PostMapping(path = "category/{category_id}/subcategory/{subcategory_id}")
+    @GetMapping(path = "category/{category_id}/subcategory/{subcategory_id}")
     public ResponseEntity<SubCategory> getSubCategory(@PathVariable("restaurant_id") Long idRestaurant ,
                                                          @PathVariable("category_id") Long idCategory,
                                                          @PathVariable("subcategory_id") Long idSubCategory){
@@ -165,10 +165,61 @@ return ResponseEntity.status(HttpStatus.OK).body("Category with it all subcatego
     @Operation(summary = "add a product to a category",
             description = "operation can be done by sys_admin or a restaurant owner",security = {@SecurityRequirement(name = "bearer-key")})
     @PostMapping(path = "category/{category_id}/product" , consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public ResponseEntity<String> addProductToCategory(@PathVariable("restaurant_id") Long idRestaurant ,
-                                                       @PathVariable("category_id") Long idCategory
+    public ResponseEntity<Product> createProductInsideCategory(@PathVariable("restaurant_id") Long idRestaurant ,
+                                                               @PathVariable("category_id") Long idCategory,
+                                                               @RequestPart ProductRequest productRequest ,
+                                                               @RequestPart(required = false) MultipartFile img
+    ){
+
+        if(Objects.nonNull(img) && !(img.getContentType().contains("png") ||img.getContentType().contains("jpg") || img.getContentType().contains("jpeg")) ){
+            throw new OpenApiResourceNotFoundException("The uploaded file should be an image (png , jpg ,jpeg)!");
+        }
+
+        return ResponseEntity.status(HttpStatus.OK).body(restaurantService.createProductInsideCategory(idRestaurant,idCategory,productRequest,img));
+
+    }
+
+    @Operation(summary = "delete a product (it will remove it from category or subcategory too)",
+            description = "operation can be done by sys_admin or a restaurant owner",security = {@SecurityRequirement(name = "bearer-key")})
+    @DeleteMapping(path = "product/{product_id}")
+    public ResponseEntity<String> deleteProduct(@PathVariable("restaurant_id") Long idRestaurant ,
+                                                       @PathVariable("product_id") Long idProduct
                                                        ){
-        return null;
+        restaurantService.deleteProduct(idRestaurant,idProduct);
+        return ResponseEntity.status(HttpStatus.OK).body("Deleted product successfully!");
+
+    }
+
+    @Operation(summary = "update a product ",
+            description = "operation can be done by sys_admin or a restaurant owner",security = {@SecurityRequirement(name = "bearer-key")})
+    @PutMapping(path = "product/{product_id}" ,consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    public ResponseEntity<Product> updateProduct(@PathVariable("restaurant_id") Long idRestaurant ,
+                                                       @PathVariable("product_id") Long idProduct,
+                                                       @RequestPart ProductRequest productRequest ,
+                                                       @RequestPart(required = false) MultipartFile img
+
+    ){
+
+        return ResponseEntity.status(HttpStatus.OK).body(restaurantService.updateProduct(idRestaurant,idProduct,productRequest,img));
+
+    }
+
+    @Operation(summary = "add a product to a subcategory",
+            description = "operation can be done by sys_admin or a restaurant owner",security = {@SecurityRequirement(name = "bearer-key")})
+    @PostMapping(path = "category/{category_id}/subcategory/{subcategory_id}/product" , consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    public ResponseEntity<Product> createProductInsideSubCategory(@PathVariable("restaurant_id") Long idRestaurant ,
+                                                                  @PathVariable("category_id") Long idCategory,
+                                                                  @PathVariable("subcategory_id") Long idSubCategory,
+                                                                  @RequestPart ProductRequest productRequest ,
+                                                                  @RequestPart(required = false) MultipartFile img
+                                                                  ){
+
+        if(Objects.nonNull(img) && !(img.getContentType().contains("png") ||img.getContentType().contains("jpg") || img.getContentType().contains("jpeg")) ){
+            throw new OpenApiResourceNotFoundException("The uploaded file should be an image (png , jpg ,jpeg)!");
+        }
+
+        return ResponseEntity.status(HttpStatus.OK).body(restaurantService.createProductInsideSubCategory(idRestaurant,idCategory,idSubCategory,productRequest,img));
+
 
     }
 

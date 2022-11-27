@@ -1,16 +1,14 @@
 package com.errros.Restobar.entities;
 
 
+import com.errros.Restobar.models.ProductRequest;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Positive;
-import javax.validation.constraints.Size;
+import javax.validation.constraints.*;
 
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @NoArgsConstructor
@@ -38,6 +36,18 @@ public class Product {
     @Positive
     private Integer priceTakenAway;
 
+    @NotNull
+    @PositiveOrZero
+    private Integer qtyStock;
+
+    @NotNull
+    @PositiveOrZero
+    private Integer buyingPrice;
+
+
+    @NotNull
+    private Boolean allowDiscount = true;
+
     @OneToOne(cascade = CascadeType.ALL,mappedBy = "product")
     private Image image;
 
@@ -50,6 +60,12 @@ public class Product {
     private SubCategory subCategory;
 
 
-
-
+    public Product(ProductRequest productRequest) {
+        this.name = productRequest.getName();
+        this.priceOnTable = productRequest.getPriceOnTable();
+        this.priceTakenAway = productRequest.getPriceTakenAway();
+        this.allowDiscount = productRequest.getAllowDiscount();
+        this.qtyStock = productRequest.getQtyStock();
+        this.buyingPrice = productRequest.getBuyingPrice();
+    }
 }

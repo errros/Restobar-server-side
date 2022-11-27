@@ -43,4 +43,15 @@ public class SubCategory {
     public SubCategory(String name) {
         this.name = name;
     }
+
+    public void addProduct(Product product) {
+         this.products.add(product);
+         product.setSubCategory(this);
+
+    }
+    public void removeProduct(Product product) {
+        this.products.remove(product);
+        product.setSubCategory(null);
+
+    }
 }
