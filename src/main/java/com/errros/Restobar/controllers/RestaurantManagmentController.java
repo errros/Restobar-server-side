@@ -23,7 +23,7 @@ import javax.validation.Valid;
 
 @RestController
 @RequestMapping("api/restaurant")
-public class RestaurantsManagmentController {
+public class RestaurantManagmentController {
 
     @Autowired
     private RestaurantService restaurantService;

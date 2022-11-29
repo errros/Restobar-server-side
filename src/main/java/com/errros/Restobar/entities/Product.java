@@ -59,6 +59,10 @@ public class Product {
     @ManyToOne
     private SubCategory subCategory;
 
+    @ManyToOne
+    @JoinColumn(name = "supplier_id")
+    private Supplier supplier;
+
 
     public Product(ProductRequest productRequest) {
         this.name = productRequest.getName();

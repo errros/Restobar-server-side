@@ -46,6 +46,13 @@ public class RestaurantService {
     private ProductRepository productRepository;
 
     @Autowired
+    private SupplierRepository supplierRepository;
+
+    @Autowired
+    private ClientRepository clientRepository;
+
+
+    @Autowired
     private ImageRepository imageRepository;
     @Autowired
     private FileService fileService;
@@ -529,5 +536,89 @@ public class RestaurantService {
 
 
 
+    }
+
+    public Supplier addSupplierOfProduct(Long idRestaurant,Long idProduct,Long idSupplier){
+
+        Restaurant restaurant = restaurantRepository.getById(idRestaurant);
+        Product product = productRepository.getById(idProduct);
+        Supplier supplier = supplierRepository.getById(idSupplier);
+
+        //check if the retrieved product is for the given restaurant
+        if (Objects.nonNull(product.getCategory()) && !product.getCategory().getRestaurant().equals(restaurant) ||
+                Objects.nonNull(product.getSubCategory()) && !product.getSubCategory().getCategory().getRestaurant().equals(restaurant)
+        ){
+            throw new OpenApiResourceNotFoundException("There's no such product with such an id in this restaurant");
+        }
+        //check if the supplier is of the given restaurant
+        if(!supplier.getRestaurant().equals(restaurant)){
+            throw new OpenApiResourceNotFoundException("There's no such supplier in this restaurant");
+        }
+        supplier.addProduct(product);
+        return supplierRepository.save(supplier);
+
+    }
+
+    public Supplier createSupplier(Long idRestaurant, SupplierRequest supplierRequest) {
+
+        Restaurant restaurant = restaurantRepository.getById(idRestaurant);
+        Supplier supplier = new Supplier(supplierRequest);
+        restaurant.addSupplier(supplier);
+        return supplierRepository.save(supplier);
+    }
+
+    public Supplier updateSupplier(Long idRestaurant, Long idSupplier, SupplierRequest supplierRequest) {
+
+        Restaurant restaurant = restaurantRepository.getById(idRestaurant);
+        Supplier supplier = supplierRepository.getById(idSupplier);
+
+        supplier.setName(supplierRequest.getName());
+        supplier.setAddress(supplierRequest.getAddress());
+        supplier.setCity(supplierRequest.getCity());
+        supplier.setPhoneNumber1(supplierRequest.getPhoneNumber1());
+        supplier.setPhoneNumber2(supplierRequest.getPhoneNumber2());
+
+    return supplierRepository.save(supplier);
+
+    }
+
+    public void deleteSupplier(Long idRestaurant, Long idSupplier) {
+        Supplier supplier = supplierRepository.getById(idSupplier);
+       supplier.getProducts().forEach(product -> supplier.removeProduct(product));
+       supplier.getRestaurant().removeSupplier(supplier);
+    supplierRepository.delete(supplier);
+    }
+
+    public List<Supplier> getAllSuppliers(Long idRestaurant){
+        return supplierRepository.findByRestaurant(restaurantRepository.getById(idRestaurant));
+    }
+    public List<Client> getAllClients(Long idRestaurant){
+        return clientRepository.findByRestaurant(restaurantRepository.getById(idRestaurant));
+    }
+
+
+    public Client createClient(Long idRestaurant, ClientRequest clientRequest) {
+        Restaurant restaurant = restaurantRepository.getById(idRestaurant);
+        Client client = new Client(clientRequest);
+        restaurant.addClient(client);
+       return clientRepository.save(client);
+    }
+
+    public Client updateClient(Long idRestaurant, Long idClient, ClientRequest clientRequest) {
+        Client client = clientRepository.getById(idClient);
+        client.setFirstname(clientRequest.getFirstname());
+        client.setSecondname(clientRequest.getSecondname());
+        client.setAddress(clientRequest.getAddress());
+        client.setCity(clientRequest.getCity());
+        client.setPhoneNumber(clientRequest.getPhoneNumber());
+        client.setPermanentDiscount(clientRequest.getPermanentDiscount());
+return clientRepository.save(client);
+    }
+
+
+    public void deleteClient(Long idRestaurant, Long idClient) {
+      Client client = clientRepository.getById(idClient);
+      client.getRestaurant().removeClient(client);
+      clientRepository.delete(client);
     }
 }

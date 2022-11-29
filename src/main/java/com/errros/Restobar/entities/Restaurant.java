@@ -56,6 +56,13 @@ public class Restaurant {
     @OneToMany(mappedBy = "restaurant" , cascade = CascadeType.ALL)
     private List<Category> categories = new ArrayList<>();
 
+    @OneToMany(mappedBy = "restaurant" , cascade = CascadeType.ALL)
+    private List<Client> clients = new ArrayList<>();
+
+    @OneToMany(mappedBy = "restaurant",cascade = CascadeType.ALL)
+    private List<Supplier> suppliers = new ArrayList<>();
+
+
 
 
     public Restaurant(RestaurantRequest restaurantRequest) {
@@ -115,6 +122,24 @@ public class Restaurant {
     public void removeCategory(Category category){
         category.setRestaurant(null);
         this.categories.remove(category);
+    }
+
+    public void addClient(Client client){
+        client.setRestaurant(this);
+        this.clients.add(client);
+    }
+    public void removeClient(Client client){
+        client.setRestaurant(null);
+        this.clients.remove(client);
+    }
+
+    public void addSupplier(Supplier supplier){
+        supplier.setRestaurant(this);
+        this.suppliers.add(supplier);
+    }
+    public void removeSupplier(Supplier supplier){
+        supplier.setRestaurant(null);
+        this.suppliers.remove(supplier);
     }
 
 

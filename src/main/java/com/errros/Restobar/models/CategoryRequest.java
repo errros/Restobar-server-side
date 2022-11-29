@@ -11,7 +11,6 @@ public class CategoryRequest {
 
 
     @NotNull
-    @Size(min = 5)
     private String name;
 
 

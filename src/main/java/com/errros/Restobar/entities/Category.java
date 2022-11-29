@@ -26,7 +26,6 @@ public class Category {
 
 
     @NotNull
-    @Size(min = 5)
     private String name;
 
 
