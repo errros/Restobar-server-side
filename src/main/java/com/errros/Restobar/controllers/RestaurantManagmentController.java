@@ -23,6 +23,7 @@ import javax.validation.Valid;
 
 @RestController
 @RequestMapping("api/restaurant")
+@CrossOrigin(origins = "*")
 public class RestaurantManagmentController {
 
     @Autowired

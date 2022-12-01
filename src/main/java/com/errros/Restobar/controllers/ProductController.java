@@ -20,6 +20,7 @@ import java.util.Objects;
 @RestController
 @RequestMapping(value = "api/restaurant/{restaurant_id}")
 @PreAuthorize("hasAuthority('SYS_ADMIN') or (hasAuthority('OWNER') and #idRestaurant == authentication.principal.user.restaurant.id)")
+@CrossOrigin(origins = "*")
 public class ProductController {
 
     @Autowired

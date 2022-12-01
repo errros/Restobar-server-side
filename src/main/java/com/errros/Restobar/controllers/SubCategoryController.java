@@ -20,6 +20,7 @@ import java.util.Objects;
 
 @RestController
 @RequestMapping(value = "api/restaurant/{restaurant_id}")
+@CrossOrigin(origins = "*")
 @PreAuthorize("hasAuthority('SYS_ADMIN') or (hasAuthority('OWNER') and #idRestaurant == authentication.principal.user.restaurant.id)")
 public class SubCategoryController {
 

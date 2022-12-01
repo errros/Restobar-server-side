@@ -17,7 +17,7 @@ import java.util.List;
 @RestController
 @RequestMapping(value = "api/restaurant/{restaurant_id}")
 @PreAuthorize("hasAuthority('SYS_ADMIN') or (hasAuthority('OWNER') and #idRestaurant == authentication.principal.user.restaurant.id)")
-
+@CrossOrigin(origins = "*")
 public class ClientController {
 
     @Autowired
