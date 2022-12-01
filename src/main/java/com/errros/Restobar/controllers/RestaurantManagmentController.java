@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.security.RolesAllowed;
 import javax.validation.Valid;
+import java.util.List;
 
 @RestController
 @RequestMapping("api/restaurant")
@@ -36,9 +37,9 @@ public class RestaurantManagmentController {
             description = "only sys_admin can do this operation",
             security = {@SecurityRequirement(name = "bearer-key")})
     @GetMapping
-    public ResponseEntity<String> getAllRestaurants(){
+    public ResponseEntity<List<Restaurant>> getAllRestaurants(){
         var responseBody = restaurantService.getAllRestaurants();
-       return ResponseEntity.status(HttpStatus.OK).body(responseBody.toString());
+       return ResponseEntity.status(HttpStatus.OK).body(responseBody);
     }
 
 
@@ -47,10 +48,10 @@ public class RestaurantManagmentController {
              description = "a sysadmin , an owner or a cashier of this restaurant can retrieve it",
             security = {@SecurityRequirement(name = "bearer-key")})
     @GetMapping("{id_restaurant}")
-    public ResponseEntity<String> getRestaurant(@PathVariable(value = "id_restaurant",required = true) Long idRestaurant){
+    public ResponseEntity<Restaurant> getRestaurant(@PathVariable(value = "id_restaurant",required = true) Long idRestaurant){
 
         var responseBody = restaurantService.getRestaurant(idRestaurant);
-   return ResponseEntity.status(HttpStatus.OK).body(responseBody.toString());
+   return ResponseEntity.status(HttpStatus.OK).body(responseBody);
     }
 
 
@@ -58,10 +59,10 @@ public class RestaurantManagmentController {
     @Operation(summary = "create a restaurant",
             description = "operation can be done by sys_admin only",security = {@SecurityRequirement(name = "bearer-key")})
     @PostMapping
-    public ResponseEntity<String> createRestaurant(@RequestBody @Valid RestaurantRequest restaurant){
+    public ResponseEntity<Restaurant> createRestaurant(@RequestBody @Valid RestaurantRequest restaurant){
         System.out.println(restaurant);
         var responseBody = restaurantService.createRestaurant(restaurant);
-       return ResponseEntity.status(HttpStatus.OK).body(responseBody.toString());
+       return ResponseEntity.status(HttpStatus.OK).body(responseBody);
 
     }
 
@@ -81,10 +82,10 @@ public class RestaurantManagmentController {
             description = "operation can be done by a sysadmin or an owner of the restauarant",
             security = {@SecurityRequirement(name = "bearer-key")})
     @PutMapping("{restaurant_id}")
-    public ResponseEntity<String> updateRestaurant(@PathVariable(value = "restaurant_id",required = true) Long idRestaurant ,
+    public ResponseEntity<Restaurant> updateRestaurant(@PathVariable(value = "restaurant_id",required = true) Long idRestaurant ,
                                              @RequestBody @Valid RestaurantRequest restaurantRequest){
         var responseBody = restaurantService.updateRestaurant(idRestaurant,restaurantRequest);
-        return ResponseEntity.status(HttpStatus.OK).body(responseBody.toString());
+        return ResponseEntity.status(HttpStatus.OK).body(responseBody);
     }
 
 
@@ -93,11 +94,11 @@ public class RestaurantManagmentController {
                     description = "either a sysadmin , or an owner of the restaurant can do",
                     security = {@SecurityRequirement(name = "bearer-key")})
     @PostMapping("/{id_restaurant}/owner")
-    public ResponseEntity<String> addOwner(@PathVariable(value = "id_restaurant",required = true) Long idres ,
+    public ResponseEntity<Restaurant> addOwner(@PathVariable(value = "id_restaurant",required = true) Long idres ,
                                            @RequestBody @Valid UserRequest ownerRequest){
 
          var restaurant = restaurantService.addOwner(idres,ownerRequest);
-return ResponseEntity.status(HttpStatus.OK).body(restaurant.toString());
+return ResponseEntity.status(HttpStatus.OK).body(restaurant);
 
     }
 
@@ -105,11 +106,11 @@ return ResponseEntity.status(HttpStatus.OK).body(restaurant.toString());
     @Operation(summary = "register a cashier in a restaurant",
             description = "operation can be done by sys_admin or an owner of that restaurant",security = {@SecurityRequirement(name = "bearer-key")})
     @PostMapping("/{id_restaurant}/cashier")
-    public ResponseEntity<String> addCashier(@PathVariable(value = "id_restaurant",required = true) Long id ,
+    public ResponseEntity<Restaurant> addCashier(@PathVariable(value = "id_restaurant",required = true) Long id ,
                                      @RequestBody @Valid UserRequest cashierRequest){
 
         var restaurant = restaurantService.addCashier(id,cashierRequest);
-        return ResponseEntity.status(HttpStatus.OK).body(restaurant.toString());
+        return ResponseEntity.status(HttpStatus.OK).body(restaurant);
     }
 
 
