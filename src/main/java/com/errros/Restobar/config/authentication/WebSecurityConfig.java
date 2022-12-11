@@ -31,7 +31,7 @@ import java.util.Arrays;
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     //this end-points are authorized for every user
-    private static final String[] WHITE_LIST = {"/","/token","/swagger-ui/**","api/restaurant/**"};
+    private static final String[] WHITE_LIST = {"/","/token","/swagger-ui/**"};
 
     @Autowired
      private PasswordEncoder passwordEncoder;

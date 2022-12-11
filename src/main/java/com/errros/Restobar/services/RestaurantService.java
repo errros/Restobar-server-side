@@ -58,12 +58,28 @@ public class RestaurantService {
     private FileService fileService;
 
 
-    public Restaurant createRestaurant(RestaurantRequest restaurantRequest) {
+    public Restaurant createRestaurant(RestaurantRequest restaurantRequest, MultipartFile img) {
 
         var sysadmin = sys_adminRepository.findAll().get(0);
         Restaurant restaurant = new Restaurant(restaurantRequest);
         restaurant.addSys_admin(sysadmin);
-        return restaurantRepository.save(restaurant);
+         restaurant = restaurantRepository.save(restaurant);
+        //Save the img if it exists
+        if(Objects.nonNull(img)){
+
+            var filename = fileService.generateFileName(img,FileType.IMG_RESTAURANT,restaurant);
+
+            var path = fileService.save(img,filename, FileType.IMG_RESTAURANT);
+            //persist image with name = restaurantname
+            Image image = new Image(filename,path.toString(),restaurant);
+            image = imageRepository.save(image);
+
+            //update the category with the saved image
+            restaurant.setImage(image);
+              restaurant = restaurantRepository.save(restaurant);
+        }
+         return restaurant;
+
 
     }
 
@@ -127,15 +143,31 @@ public class RestaurantService {
       return restaurant;
     }
 
-    public Restaurant updateRestaurant(Long idRestaurant, RestaurantRequest restaurantRequest) {
+    public Restaurant updateRestaurant(Long idRestaurant, RestaurantRequest restaurantRequest , MultipartFile img) {
 
         var persistedRestaurant = restaurantRepository.getById(idRestaurant);
 
         persistedRestaurant.setName(restaurantRequest.getName());
         persistedRestaurant.setPhoneNumber(restaurantRequest.getPhoneNumber());
         persistedRestaurant.setAddress(restaurantRequest.getAddress());
-        return restaurantRepository.save(persistedRestaurant);
 
+        persistedRestaurant.setImage(null);
+        imageRepository.deleteByRestaurant(persistedRestaurant);
+        //TODO delete the image physically too
+        if(Objects.nonNull(img)){
+
+            var filename = fileService.generateFileName(img,FileType.IMG_RESTAURANT,persistedRestaurant);
+
+            var path = fileService.save(img,filename, FileType.IMG_RESTAURANT);
+            //persist image with name = restaurantname
+            Image image = new Image(filename,path.toString(),persistedRestaurant);
+            image = imageRepository.save(image);
+
+            //update the category with the saved image
+            persistedRestaurant.setImage(image);
+           persistedRestaurant = restaurantRepository.save(persistedRestaurant);
+        }
+        return persistedRestaurant;
 
     }
 

@@ -51,7 +51,7 @@ public class User {
 
 
 
-    @Column
+    @Column(unique = true)
     @NotNull
     @Email
     private String email;

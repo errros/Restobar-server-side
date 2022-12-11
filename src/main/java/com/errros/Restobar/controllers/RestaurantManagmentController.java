@@ -10,17 +10,21 @@ import com.errros.Restobar.models.UserRole;
 import com.errros.Restobar.services.RestaurantService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import org.springdoc.api.OpenApiResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.security.RolesAllowed;
 import javax.validation.Valid;
 import java.util.List;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("api/restaurant")
@@ -58,10 +62,16 @@ public class RestaurantManagmentController {
     @PreAuthorize("hasAuthority('SYS_ADMIN')")
     @Operation(summary = "create a restaurant",
             description = "operation can be done by sys_admin only",security = {@SecurityRequirement(name = "bearer-key")})
-    @PostMapping
-    public ResponseEntity<Restaurant> createRestaurant(@RequestBody @Valid RestaurantRequest restaurant){
-        System.out.println(restaurant);
-        var responseBody = restaurantService.createRestaurant(restaurant);
+    @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    public ResponseEntity<Restaurant> createRestaurant(@RequestPart @Valid RestaurantRequest restaurant , @RequestPart(required = false) MultipartFile img){
+
+
+        if(Objects.nonNull(img) && !(img.getContentType().contains("png") ||img.getContentType().contains("jpg") || img.getContentType().contains("jpeg")) ){
+            throw new OpenApiResourceNotFoundException("The uploaded file should be an image (png , jpg ,jpeg)!");
+        }
+
+
+        var responseBody = restaurantService.createRestaurant(restaurant,img);
        return ResponseEntity.status(HttpStatus.OK).body(responseBody);
 
     }
@@ -81,10 +91,18 @@ public class RestaurantManagmentController {
     @Operation(summary = "update a restaurant infos",
             description = "operation can be done by a sysadmin or an owner of the restauarant",
             security = {@SecurityRequirement(name = "bearer-key")})
-    @PutMapping("{restaurant_id}")
+    @PutMapping(value = "{restaurant_id}",consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<Restaurant> updateRestaurant(@PathVariable(value = "restaurant_id",required = true) Long idRestaurant ,
-                                             @RequestBody @Valid RestaurantRequest restaurantRequest){
-        var responseBody = restaurantService.updateRestaurant(idRestaurant,restaurantRequest);
+                                             @RequestPart @Valid RestaurantRequest restaurant,@RequestPart(required = false) MultipartFile img){
+
+
+        if(Objects.nonNull(img) && !(img.getContentType().contains("png") ||img.getContentType().contains("jpg") || img.getContentType().contains("jpeg")) ){
+            throw new OpenApiResourceNotFoundException("The uploaded file should be an image (png , jpg ,jpeg)!");
+        }
+
+
+        var responseBody = restaurantService.updateRestaurant(idRestaurant,restaurant,img);
+
         return ResponseEntity.status(HttpStatus.OK).body(responseBody);
     }
 
