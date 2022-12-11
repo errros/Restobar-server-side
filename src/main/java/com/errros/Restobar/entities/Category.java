@@ -55,6 +55,9 @@ public class Category {
     @ManyToMany(mappedBy = "categories")
     private List<Tva> tvas = new ArrayList<>();
 
+    @JsonIgnore
+    @ManyToMany(mappedBy = "category")
+    private List<Accompaniment> accompaniments = new ArrayList<>();
 
 
     public Category(CategoryRequest categoryRequest) {
@@ -80,7 +83,6 @@ public class Category {
         subCategory.setCategory(null);
     }
 
-
     public void addProduct(Product product) {
         this.products.add(product);
         product.setCategory(this);
@@ -90,6 +92,18 @@ public class Category {
         this.products.remove(product);
         product.setCategory(null);
     }
+
+    public void addAccompaniment(Accompaniment accompaniment) {
+        this.accompaniments.add(accompaniment);
+        accompaniment.setCategory(this);
+    }
+
+    public void removeAccompaniment(Accompaniment accompaniment) {
+        this.accompaniments.remove(accompaniment);
+        accompaniment.setCategory(null);
+    }
+
+
 
 
 

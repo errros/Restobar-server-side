@@ -15,14 +15,39 @@ public class ProductRequest {
     @NotEmpty
     private String name;
 
+
     @NotNull
+    private Boolean manageSizes = false;
+
+
     @Positive
     private Integer priceOnTable;
 
 
-    @NotNull
     @Positive
     private Integer priceTakenAway;
+
+    @PositiveOrZero
+    private Integer priceOnTableS;
+
+
+    @PositiveOrZero
+    private Integer priceTakenAwayS;
+
+    @PositiveOrZero
+    private Integer priceOnTableM;
+
+
+    @PositiveOrZero
+    private Integer priceTakenAwayM;
+
+    @PositiveOrZero
+    private Integer priceOnTableL;
+
+
+    @Positive
+    private Integer priceTakenAwayL;
+
 
 
 

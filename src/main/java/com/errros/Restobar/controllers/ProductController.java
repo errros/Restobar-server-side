@@ -1,7 +1,9 @@
 package com.errros.Restobar.controllers;
 
 
+import com.errros.Restobar.entities.Accompaniment;
 import com.errros.Restobar.entities.Product;
+import com.errros.Restobar.models.AccompanimentType;
 import com.errros.Restobar.models.ProductRequest;
 import com.errros.Restobar.services.RestaurantService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -25,6 +27,18 @@ public class ProductController {
 
     @Autowired
     private RestaurantService restaurantService;
+
+
+    @Operation(summary = "get a single product",
+            description = "operation can be done by sys_admin or a restaurant owner",security = {@SecurityRequirement(name = "bearer-key")})
+    @GetMapping(path = "product/{product_id}")
+    public ResponseEntity<Product> getProduct(@PathVariable("restaurant_id") Long idRestaurant ,
+                                              @PathVariable("product_id") Long idProduct){
+
+        return ResponseEntity.status(HttpStatus.OK).body(restaurantService.getProduct(idRestaurant,idProduct));
+
+    }
+
 
 
 
@@ -91,6 +105,34 @@ public class ProductController {
 
     }
 
+
+    @Operation(summary = "accompany a product with a category ",
+            description = "operation can be done by sys_admin or a restaurant owner",security = {@SecurityRequirement(name = "bearer-key")})
+    @PostMapping(path = "product/{product_id}/accompaniment")
+    public ResponseEntity<Accompaniment> createAccompaniment(@PathVariable("restaurant_id") Long idRestaurant ,
+                                                             @PathVariable("product_id") Long idProduct,
+                                                             @RequestParam(name = "category") Long idCategory,
+                                                             @RequestParam(name = "type") AccompanimentType type,
+                                                             @RequestParam(required = false , name = "nbr") Integer nbr
+    ){
+
+        return ResponseEntity.status(HttpStatus.OK).body(restaurantService.createAccompaniment(idRestaurant,idProduct,idCategory,type,nbr));
+    }
+
+
+
+    @Operation(summary = "delete an accompaniment between a product and a category",
+            description = "operation can be done by sys_admin or a restaurant owner",security = {@SecurityRequirement(name = "bearer-key")})
+    @DeleteMapping(path = "product/{product_id}/accompaniment/{accompaniment_id}")
+
+    public ResponseEntity<String> removeAccompaniment(@PathVariable("restaurant_id") Long idRestaurant ,
+                                                      @PathVariable("product_id") Long idProduct,
+                                                      @PathVariable("accompaniment_id") Long idAccompaniment
+                                                      ){
+
+        restaurantService.deleteAccompaniment(idRestaurant,idProduct,idAccompaniment);
+return ResponseEntity.status(HttpStatus.OK).body("Deleted Successfully!");
+    }
 
 
 

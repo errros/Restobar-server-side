@@ -9,6 +9,8 @@ import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 import javax.validation.constraints.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @NoArgsConstructor
@@ -28,19 +30,41 @@ public class Product {
     private String name;
 
     @NotNull
+    private Boolean manageSizes = false;
+
+
     @Positive
     private Integer priceOnTable;
 
-
-    @NotNull
     @Positive
     private Integer priceTakenAway;
 
-    @NotNull
-    @PositiveOrZero
-    private Integer qtyStock;
 
-    @NotNull
+    @PositiveOrZero
+    private Integer priceOnTableS;
+
+
+    @PositiveOrZero
+    private Integer priceTakenAwayS;
+
+    @PositiveOrZero
+    private Integer priceOnTableM;
+
+
+    @PositiveOrZero
+    private Integer priceTakenAwayM;
+
+    @PositiveOrZero
+    private Integer priceOnTableL;
+
+
+    @Positive
+    private Integer priceTakenAwayL;
+
+
+    @PositiveOrZero
+    private Integer qtyStock ;
+
     @PositiveOrZero
     private Integer buyingPrice;
 
@@ -64,10 +88,44 @@ public class Product {
     private Supplier supplier;
 
 
+    @ManyToMany(mappedBy = "product")
+    private List<Accompaniment> accompaniments = new ArrayList<>();
+
+
+
+    public void addAccompaniment(Accompaniment accompaniment) {
+        this.accompaniments.add(accompaniment);
+        accompaniment.setProduct(this);
+    }
+
+    public void removeAccompaniment(Accompaniment accompaniment) {
+        this.accompaniments.remove(accompaniment);
+        accompaniment.setProduct(null);
+    }
+
+
+
+
     public Product(ProductRequest productRequest) {
         this.name = productRequest.getName();
-        this.priceOnTable = productRequest.getPriceOnTable();
-        this.priceTakenAway = productRequest.getPriceTakenAway();
+        this.manageSizes = productRequest.getManageSizes();
+        if(!manageSizes) {
+            this.priceOnTable = productRequest.getPriceOnTable();
+            this.priceTakenAway = productRequest.getPriceTakenAway();
+
+        }else {
+            this.priceOnTableS = productRequest.getPriceOnTableS();
+            this.priceTakenAwayS = productRequest.getPriceTakenAwayS();
+
+            this.priceOnTableM = productRequest.getPriceOnTableM();
+            this.priceTakenAwayM = productRequest.getPriceTakenAwayM();
+
+
+            this.priceOnTableL = productRequest.getPriceOnTableL();
+            this.priceTakenAwayL = productRequest.getPriceTakenAwayL();
+
+        }
+
         this.allowDiscount = productRequest.getAllowDiscount();
         this.qtyStock = productRequest.getQtyStock();
         this.buyingPrice = productRequest.getBuyingPrice();

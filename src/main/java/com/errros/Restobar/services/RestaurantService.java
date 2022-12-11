@@ -51,6 +51,8 @@ public class RestaurantService {
     @Autowired
     private ClientRepository clientRepository;
 
+    @Autowired
+    private AccompanimentRepository accompanimentRepository;
 
     @Autowired
     private ImageRepository imageRepository;
@@ -434,6 +436,25 @@ public class RestaurantService {
 
     }
 
+
+
+    public Product getProduct(Long idRestaurant, Long idProduct) {
+        Restaurant restaurant = restaurantRepository.getById(idRestaurant);
+        Product product = productRepository.getById(idProduct);
+
+
+        //check if the retrieved product is for the given restaurant
+        if (Objects.nonNull(product.getCategory()) && !product.getCategory().getRestaurant().equals(restaurant) ||
+                Objects.nonNull(product.getSubCategory()) && !product.getSubCategory().getCategory().getRestaurant().equals(restaurant)
+        ) {
+            throw new OpenApiResourceNotFoundException("There's no such product with such an id in this restaurant");
+
+        }
+
+        return product;
+
+    }
+
     public Product createProductInsideCategory(Long idRestaurant, Long idCategory, ProductRequest productRequest, MultipartFile img) {
 
 
@@ -570,6 +591,63 @@ public class RestaurantService {
 
     }
 
+
+
+    public Accompaniment createAccompaniment(Long idRestaurant,Long idProduct , Long idCategory , AccompanimentType type , Integer nbr) {
+
+        Restaurant restaurant = restaurantRepository.getById(idRestaurant);
+        Product product = productRepository.getById(idProduct);
+        Category category = categoryRepository.getById(idCategory);
+
+        //check if the retrieved product is for the given restaurant
+        if (Objects.nonNull(product.getCategory()) && !product.getCategory().getRestaurant().equals(restaurant) ||
+                Objects.nonNull(product.getSubCategory()) && !product.getSubCategory().getCategory().getRestaurant().equals(restaurant)
+        ) {
+            throw new OpenApiResourceNotFoundException("There's no such product with such an id in this restaurant");
+
+        }
+
+        //check if the retrieved category is for the given restaurant
+        if (!restaurant.getCategories().contains(category)) {
+            throw new OpenApiResourceNotFoundException("There's no category with such an id in this restaurant");
+        }
+
+       Accompaniment accompaniment = new Accompaniment(type,category);
+        if(type == AccompanimentType.MANY_INCLUDED_IN_PRICE || type == AccompanimentType.MANY_NOT_INCLUDED_IN_PRICE){
+            accompaniment.setNbr(nbr);
+        }
+
+        product.addAccompaniment(accompaniment);
+        category.addAccompaniment(accompaniment);
+
+
+       return accompanimentRepository.save(accompaniment);
+        }
+
+        public void deleteAccompaniment(Long idRestaurant,Long idProduct , Long idAccompaniment) {
+
+        Restaurant restaurant = restaurantRepository.getById(idRestaurant);
+        Product product = productRepository.getById(idProduct);
+        Accompaniment accompaniment = accompanimentRepository.getById(idAccompaniment);
+        //check if the retrieved product is for the given restaurant
+        if (Objects.nonNull(product.getCategory()) && !product.getCategory().getRestaurant().equals(restaurant) ||
+                Objects.nonNull(product.getSubCategory()) && !product.getSubCategory().getCategory().getRestaurant().equals(restaurant)
+        ) {
+            throw new OpenApiResourceNotFoundException("There's no such product with such an id in this restaurant");
+
+        }
+
+        if(!accompaniment.getCategory().getRestaurant().equals(restaurant)){
+            throw new OpenApiResourceNotFoundException("There's no accompaniment with such an id in this restaurant");
+        }
+
+
+        accompaniment.getCategory().removeAccompaniment(accompaniment);
+        accompaniment.getProduct().removeAccompaniment(accompaniment);
+        accompanimentRepository.deleteById(accompaniment.getId());
+
+        }
+
     public Supplier addSupplierOfProduct(Long idRestaurant,Long idProduct,Long idSupplier){
 
         Restaurant restaurant = restaurantRepository.getById(idRestaurant);
@@ -653,4 +731,5 @@ return clientRepository.save(client);
       client.getRestaurant().removeClient(client);
       clientRepository.delete(client);
     }
+
 }
